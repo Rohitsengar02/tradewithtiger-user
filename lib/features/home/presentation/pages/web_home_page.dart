@@ -11,6 +11,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:tradewithtiger/features/profile/presentation/pages/profile_page.dart';
 import 'package:tradewithtiger/features/auth/presentation/pages/login_page.dart';
 import 'package:tradewithtiger/features/auth/presentation/pages/signup_page.dart';
+import 'package:tradewithtiger/features/course/presentation/pages/my_courses_page.dart';
+import 'package:tradewithtiger/features/community/presentation/pages/community_feed_page.dart';
+import 'package:tradewithtiger/features/profile/presentation/pages/legal/about_us_page.dart';
 
 class WebHomePage extends StatefulWidget {
   const WebHomePage({super.key});
@@ -239,11 +242,9 @@ class _WebHomePageState extends State<WebHomePage> {
               children: [
                 _buildNavLink("HOME"),
                 _buildNavLink("SHOP"),
+                _buildNavLink("MY COURSE"),
+                _buildNavLink("COMMUNITY"),
                 _buildNavLink("ABOUT US"),
-                _buildNavLink("CONTACT"),
-                _buildNavLink("RULES"),
-                _buildNavLink("FAQ"),
-                _buildNavLink("NEWS"),
               ],
             ),
 
@@ -350,6 +351,21 @@ class _WebHomePageState extends State<WebHomePage> {
           Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => const ExploreCoursesPage()),
+          );
+        } else if (title == "MY COURSE") {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const MyCoursesPage()),
+          );
+        } else if (title == "COMMUNITY") {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const CommunityFeedPage()),
+          );
+        } else if (title == "ABOUT US") {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const AboutUsPage()),
           );
         }
       },
