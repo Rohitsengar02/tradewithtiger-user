@@ -4,6 +4,9 @@ import 'package:hugeicons/hugeicons.dart';
 import 'package:tradewithtiger/features/course/presentation/pages/course_details_page.dart';
 import 'package:tradewithtiger/core/services/course_service.dart';
 import 'package:shimmer/shimmer.dart';
+// import 'package:tradewithtiger/features/profile/presentation/pages/profile_page.dart'; // Removed
+// import 'package:tradewithtiger/features/course/presentation/pages/my_courses_page.dart'; // Removed
+import 'package:tradewithtiger/features/home/presentation/widgets/web_sidebar.dart';
 
 class ExploreCoursesPage extends StatefulWidget {
   const ExploreCoursesPage({super.key});
@@ -16,6 +19,15 @@ class _ExploreCoursesPageState extends State<ExploreCoursesPage> {
   final TextEditingController _searchController = TextEditingController();
   final CourseService _courseService = CourseService();
   String _searchQuery = "";
+  String _selectedCategory = "All";
+  final List<String> _categories = [
+    "All",
+    "Trading",
+    "Crypto",
+    "Forex",
+    "Stocks",
+    "Options",
+  ];
   List<Map<String, dynamic>> _allCourses = [];
   bool _isLoading = true;
 
@@ -40,18 +52,39 @@ class _ExploreCoursesPageState extends State<ExploreCoursesPage> {
   }
 
   List<Map<String, dynamic>> get filteredProducts {
-    if (_searchQuery.isEmpty) return _allCourses;
-    return _allCourses
-        .where(
-          (p) =>
-              p['title'].toString().toLowerCase().contains(
-                _searchQuery.toLowerCase(),
-              ) ||
-              p['category'].toString().toLowerCase().contains(
-                _searchQuery.toLowerCase(),
-              ),
-        )
-        .toList();
+    var courses = _allCourses;
+
+    // Filter by Category
+    if (_selectedCategory != "All") {
+      courses = courses.where((p) {
+        final title = p['title'].toString().toLowerCase();
+        final cat = p['category']
+            .toString()
+            .toLowerCase(); // Assuming category field exists or infer
+        // Simple inference for demo if category missing
+        if (p['category'] != null) {
+          return cat.contains(_selectedCategory.toLowerCase());
+        }
+        return title.contains(_selectedCategory.toLowerCase());
+      }).toList();
+    }
+
+    // Filter by Search
+    if (_searchQuery.isNotEmpty) {
+      courses = courses
+          .where(
+            (p) =>
+                p['title'].toString().toLowerCase().contains(
+                  _searchQuery.toLowerCase(),
+                ) ||
+                p['category'].toString().toLowerCase().contains(
+                  _searchQuery.toLowerCase(),
+                ),
+          )
+          .toList();
+    }
+
+    return courses;
   }
 
   @override
@@ -64,32 +97,130 @@ class _ExploreCoursesPageState extends State<ExploreCoursesPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      body: SafeArea(
-        child: Column(
-          children: [
-            _buildTopBar(),
-            Expanded(
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildPromotionalBanner(),
-                    _isLoading
-                        ? _buildSkeletonGrid()
-                        : _buildProductGrid(context),
-                    const SizedBox(height: 100),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          if (constraints.maxWidth > 900) {
+            return _buildDesktopLayout();
+          }
+          return _buildMobileLayout();
+        },
       ),
     );
   }
 
-  Widget _buildTopBar() {
+  Widget _buildDesktopLayout() {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Sidebar
+        const SizedBox(width: 250, child: WebSidebar(activePage: "Shop")),
+        // Main Content
+        Expanded(
+          child: Container(
+            color: const Color(0xFFF1F5F9), // Slight contrast
+            child: Column(
+              children: [
+                _buildTopBar(isDesktop: true),
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(30),
+                    physics: const BouncingScrollPhysics(),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildPromotionalBanner(),
+                        // Add horizontal category filter here to compensate for lost sidebar
+                        _buildCategoryFilterList(),
+                        const SizedBox(height: 30),
+                        _isLoading
+                            ? _buildSkeletonGrid()
+                            : _buildProductGrid(context),
+                        const SizedBox(height: 100),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCategoryFilterList() {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: _categories.map((cat) {
+          final isSelected = _selectedCategory == cat;
+          return Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: InkWell(
+              onTap: () => setState(() => _selectedCategory = cat),
+              borderRadius: BorderRadius.circular(20),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 10,
+                ),
+                decoration: BoxDecoration(
+                  color: isSelected ? const Color(0xFF6366F1) : Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  border: isSelected
+                      ? null
+                      : Border.all(color: Colors.grey.shade300),
+                  boxShadow: isSelected
+                      ? [
+                          BoxShadow(
+                            color: const Color(0xFF6366F1).withOpacity(0.3),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ]
+                      : null,
+                ),
+                child: Text(
+                  cat,
+                  style: TextStyle(
+                    color: isSelected ? Colors.white : Colors.grey.shade700,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildMobileLayout() {
+    return SafeArea(
+      child: Column(
+        children: [
+          _buildTopBar(),
+          Expanded(
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildPromotionalBanner(),
+                  _isLoading
+                      ? _buildSkeletonGrid()
+                      : _buildProductGrid(context),
+                  const SizedBox(height: 100),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTopBar({bool isDesktop = false}) {
     return Padding(
       padding: const EdgeInsets.all(20.0),
       child: Row(
@@ -146,20 +277,22 @@ class _ExploreCoursesPageState extends State<ExploreCoursesPage> {
               ),
             ),
           ),
-          const SizedBox(width: 15),
-          Container(
-            height: 52,
-            width: 52,
-            decoration: BoxDecoration(
-              color: const Color(0xFF1E293B),
-              borderRadius: BorderRadius.circular(18),
+          if (!isDesktop) // Hide toggle button on desktop for now as sidebar is always shown
+            const SizedBox(width: 15),
+          if (!isDesktop)
+            Container(
+              height: 52,
+              width: 52,
+              decoration: BoxDecoration(
+                color: const Color(0xFF1E293B),
+                borderRadius: BorderRadius.circular(18),
+              ),
+              child: const Icon(
+                Icons.tune_rounded,
+                color: Colors.white,
+                size: 22,
+              ),
             ),
-            child: const Icon(
-              Icons.tune_rounded,
-              color: Colors.white,
-              size: 22,
-            ),
-          ),
         ],
       ),
     );
@@ -168,8 +301,9 @@ class _ExploreCoursesPageState extends State<ExploreCoursesPage> {
   Widget _buildPromotionalBanner() {
     return Container(
       margin: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-      height: 160,
+      // dynamic height to prevent overflow
       width: double.infinity,
+      constraints: const BoxConstraints(minHeight: 160),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           colors: [Color(0xFF6366F1), Color(0xFF4F46E5)],
@@ -276,49 +410,52 @@ class _ExploreCoursesPageState extends State<ExploreCoursesPage> {
       );
     }
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                _searchQuery.isEmpty ? "All Courses" : "Results",
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w900,
-                  color: Color(0xFF1E293B),
+    return Center(
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 1600),
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  _searchQuery.isEmpty ? "All Courses" : "Results",
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w900,
+                    color: Color(0xFF1E293B),
+                  ),
                 ),
-              ),
-              Text(
-                "${products.length} found",
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.grey.shade500,
+                Text(
+                  "${products.length} found",
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey.shade500,
+                  ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              mainAxisSpacing: 16,
-              crossAxisSpacing: 16,
-              childAspectRatio: 0.72,
+              ],
             ),
-            itemCount: products.length,
-            itemBuilder: (context, index) {
-              final product = products[index];
-              return _buildCourseCard(product, index);
-            },
-          ),
-        ],
+            const SizedBox(height: 20),
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                maxCrossAxisExtent: 300,
+                mainAxisSpacing: 20,
+                crossAxisSpacing: 20,
+                childAspectRatio: 0.75, // Adjusted for card height
+              ),
+              itemCount: products.length,
+              itemBuilder: (context, index) {
+                final product = products[index];
+                return _buildCourseCard(product, index);
+              },
+            ),
+          ],
+        ),
       ),
     );
   }

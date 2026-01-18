@@ -3,14 +3,45 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // User Profiles:
+    // User Profiles
     // Keep this secure: Users can only read/write their OWN profile.
     match /users/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
+      
+      // Saved Posts Subcollection
+      match /saved_posts/{postId} {
+         allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
     }
     
-    // Allow admin to read/write all course data including subcollections
-    // (As requested, set to true to unblock admin features)
+    // Community Features
+    match /community/{postId} {
+      // Any one can read posts
+      allow read: if true;
+      
+      // Only authenticated users can create posts, and userId must match
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      
+      // Updates: 
+      // 1. Author can update content
+      // 2. Any auth user can update 'likes' (for liking) or 'solutionsCount'
+      allow update: if request.auth != null && (
+        resource.data.userId == request.auth.uid || 
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes', 'solutionsCount', 'isSaved'])
+      );
+      
+      // Only author can delete
+      allow delete: if request.auth != null && resource.data.userId == request.auth.uid;
+
+      // Answers Subcollection
+      match /answers/{answerId} {
+        allow read: if true;
+        allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+        allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+      }
+    }
+
+    // Courses (Admin/Dev Mode - Public R/W as requested)
     match /courses/{courseId} {
       allow read, write: if true;
       
@@ -26,12 +57,12 @@ service cloud.firestore {
       }
     }
     
-    // Allow access to media library
+    // Media Library
     match /media/{mediaId} {
       allow read, write: if true;
     }
     
-    // Allow access to application settings (e.g., Home Page configuration)
+    // Application Settings
     match /settings/{settingId} {
       allow read, write: if true;
     }

@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:tradewithtiger/core/services/video_preload_service.dart';
+import 'package:flutter/foundation.dart';
+import 'package:tradewithtiger/features/auth/presentation/pages/login_page.dart';
 import 'package:tradewithtiger/features/auth/presentation/pages/onboarding_page.dart';
+import 'package:tradewithtiger/features/home/presentation/pages/home_page.dart';
+import 'package:tradewithtiger/features/home/presentation/pages/web_home_page.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -39,10 +43,22 @@ class _SplashScreenState extends State<SplashScreen> {
     await Future.delayed(const Duration(milliseconds: 2500));
 
     if (!mounted) return;
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => const OnboardingPage()),
-    );
+
+    // Check if running on web or large screen (desktop size)
+    // The user requested to show onboarding only in "app" (mobile) and not on web or desktop screen size.
+    final bool isDesktopScreen = MediaQuery.of(context).size.width > 800;
+
+    if (kIsWeb || isDesktopScreen) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const WebHomePage()),
+      );
+    } else {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const OnboardingPage()),
+      );
+    }
   }
 
   @override

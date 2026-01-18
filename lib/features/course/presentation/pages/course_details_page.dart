@@ -4,6 +4,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:tradewithtiger/features/course/presentation/pages/course_video_page.dart';
+import 'package:tradewithtiger/features/home/presentation/widgets/web_sidebar.dart';
 
 class CourseDetailsPage extends StatefulWidget {
   final Map<String, dynamic> course;
@@ -119,24 +120,281 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
       value: SystemUiOverlayStyle.light,
       child: Scaffold(
         backgroundColor: Colors.white,
-        body: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildCourseHero(context),
-              _buildCourseMeta(),
-              _buildAboutSection(),
-              _buildLessonHeader(),
-              _buildLessonList(context),
-              const SizedBox(height: 40),
-            ],
-          ),
+        body: LayoutBuilder(
+          builder: (context, constraints) {
+            if (constraints.maxWidth > 900) {
+              return _buildDesktopLayout();
+            }
+            return _buildMobileLayout();
+          },
         ),
-        bottomNavigationBar: _buildBottomAction(context),
+        bottomNavigationBar: MediaQuery.of(context).size.width > 900
+            ? null
+            : _buildBottomAction(context),
       ),
     );
   }
+
+  Widget _buildMobileLayout() {
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildCourseHero(context),
+          _buildCourseMeta(),
+          _buildAboutSection(),
+          _buildLessonHeader(),
+          _buildLessonList(context),
+          const SizedBox(height: 40),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDesktopLayout() {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Sidebar (Compact version or same as Explore)
+        const SizedBox(width: 250, child: WebSidebar(activePage: "Shop")),
+        // Main Content
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(40),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  flex: 3,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Breadcrumbs
+                      Text(
+                        "Top courses  >  ${_course['category'] ?? 'General'}",
+                        style: TextStyle(
+                          color: Colors.grey.shade600,
+                          fontSize: 13,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        _course['title'] ?? 'Untitled Course',
+                        style: const TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.w900,
+                          height: 1.2,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        _course['description'] ?? 'No description.',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          height: 1.6,
+                          color: Color(0xFF475569),
+                        ),
+                      ),
+                      const SizedBox(height: 30),
+                      _buildMetaRow(),
+                      const SizedBox(height: 40),
+                      const Text(
+                        "Course content",
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      _buildLessonList(context, isDesktop: true),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 40),
+                // Right CTA Card
+                Expanded(flex: 2, child: _buildDesktopCTACard()),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMetaRow() {
+    final rating = _course['rating']?.toString() ?? "5.0";
+    final students = _course['students']?.toString() ?? "2k";
+    final instructor = _course['instructor'] ?? "Teacher";
+    return Row(
+      children: [
+        const Icon(Icons.star_rounded, color: Colors.amber, size: 20),
+        const SizedBox(width: 4),
+        Text(
+          "$rating rating",
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(width: 20),
+        const Icon(Icons.people_outline_rounded, color: Colors.grey, size: 20),
+        const SizedBox(width: 4),
+        Text(
+          "$students students",
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(width: 20),
+        const CircleAvatar(
+          radius: 12,
+          backgroundImage: AssetImage("assets/images/mentor_1.png"),
+        ),
+        const SizedBox(width: 8),
+        Text(instructor, style: const TextStyle(fontWeight: FontWeight.bold)),
+      ],
+    );
+  }
+
+  Widget _buildDesktopCTACard() {
+    // Show Image Thumbnail top (User requested Thumbnail instead of Video)
+    final String? thumbnailUrl =
+        (_course['thumbnailUrl'] as String?) ??
+        (_course['videoThumbnailUrl'] as String?);
+
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.grey.shade200),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Square Full Image Thumbnail
+          AspectRatio(
+            aspectRatio: 1.0,
+            child: Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                image: thumbnailUrl != null
+                    ? DecorationImage(
+                        image: NetworkImage(thumbnailUrl),
+                        fit: BoxFit.cover,
+                      )
+                    : const DecorationImage(
+                        image: AssetImage(
+                          'assets/images/course_bg_analysis.png',
+                        ),
+                        fit: BoxFit.cover,
+                      ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+          Row(
+            children: [
+              Text(
+                _course['price']?.toString() ?? '₹4999',
+                style: const TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                "₹8000",
+                style: TextStyle(
+                  fontSize: 16,
+                  decoration: TextDecoration.lineThrough,
+                  color: Colors.grey.shade500,
+                ),
+              ),
+              const Spacer(),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.red.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Text(
+                  "50% OFF",
+                  style: TextStyle(
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          ElevatedButton(
+            onPressed: _showPaymentGateway,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF6366F1),
+              foregroundColor: Colors.white,
+              minimumSize: const Size(double.infinity, 50),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: const Text(
+              "Buy Now",
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
+          ),
+          const SizedBox(height: 24),
+          const Text(
+            "This course includes:",
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 12),
+          _buildIncludeItem(
+            Icons.ondemand_video_rounded,
+            "55 hours on-demand video",
+          ),
+          _buildIncludeItem(
+            Icons.file_download_outlined,
+            "49 downloadable resources",
+          ),
+          _buildIncludeItem(
+            Icons.all_inclusive_rounded,
+            "Full lifetime access",
+          ),
+          _buildIncludeItem(
+            Icons.phone_android_rounded,
+            "Access on mobile and TV",
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildIncludeItem(IconData icon, String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: Colors.grey.shade600),
+          const SizedBox(width: 10),
+          Text(
+            text,
+            style: TextStyle(color: Colors.grey.shade700, fontSize: 13),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Removed _buildDesktopSidebar in favor of WebSidebar
 
   Widget _buildCourseHero(BuildContext context) {
     // Prioritize image thumbnail for static header background
@@ -402,7 +660,7 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
     );
   }
 
-  Widget _buildLessonList(BuildContext context) {
+  Widget _buildLessonList(BuildContext context, {bool isDesktop = false}) {
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -464,7 +722,9 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
             margin: const EdgeInsets.only(bottom: 20),
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: isDesktop
+                  ? Colors.grey.shade50
+                  : Colors.white, // Slight change for desktop
               borderRadius: BorderRadius.circular(28),
               border: Border.all(color: Colors.grey.shade100),
               boxShadow: [

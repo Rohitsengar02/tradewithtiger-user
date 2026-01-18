@@ -18,27 +18,31 @@ class AuthService {
   // Sign in with Google
   Future<UserCredential?> signInWithGoogle() async {
     try {
-      // Trigger the authentication flow
-      final gsi.GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-      if (googleUser == null) {
-        // The user canceled the sign-in
-        return null;
+      UserCredential userCredential;
+
+      if (kIsWeb) {
+        // Web-specific flow using Firebase Popup
+        GoogleAuthProvider googleProvider = GoogleAuthProvider();
+        googleProvider.addScope('email');
+        googleProvider.setCustomParameters({'login_hint': 'user@example.com'});
+        userCredential = await _auth.signInWithPopup(googleProvider);
+      } else {
+        // Mobile flow using GoogleSignIn plugin
+        final gsi.GoogleSignInAccount? googleUser = await _googleSignIn
+            .signIn();
+        if (googleUser == null) {
+          return null; // The user canceled the sign-in
+        }
+
+        final gsi.GoogleSignInAuthentication googleAuth =
+            await googleUser.authentication;
+        final OAuthCredential credential = GoogleAuthProvider.credential(
+          accessToken: googleAuth.accessToken,
+          idToken: googleAuth.idToken,
+        );
+
+        userCredential = await _auth.signInWithCredential(credential);
       }
-
-      // Obtain the auth details from the request
-      final gsi.GoogleSignInAuthentication googleAuth =
-          await googleUser.authentication;
-
-      // Create a new credential
-      final OAuthCredential credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
-
-      // Once signed in, return the UserCredential
-      final UserCredential userCredential = await _auth.signInWithCredential(
-        credential,
-      );
 
       // Save user to Firestore if new
       if (userCredential.user != null) {
@@ -51,7 +55,6 @@ class AuthService {
       return userCredential;
     } catch (e) {
       debugPrint("Error signing in with Google: $e");
-      // If it's a platform exception, print details
       return null;
     }
   }
