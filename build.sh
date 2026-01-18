@@ -1,0 +1,12 @@
+#!/bin/bash
+
+if [ -d .flutter ]; then
+  cd .flutter && git pull && cd ..
+else
+  git clone https://github.com/flutter/flutter.git .flutter
+fi
+
+./.flutter/bin/flutter doctor
+./.flutter/bin/flutter clean
+./.flutter/bin/flutter config --enable-web
+./.flutter/bin/flutter build web --release --no-tree-shake-icons
