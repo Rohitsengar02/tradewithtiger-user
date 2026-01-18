@@ -32,4 +32,4 @@ echo "Get Dependencies..."
 flutter pub get
 
 echo "Building..."
-flutter build web --release --no-tree-shake-icons --web-renderer auto
+flutter build web --release --no-tree-shake-icons
