@@ -1,0 +1,53 @@
+# TradeWithTiger - Course Selling App Plan
+
+## 1. App Vision
+A premium, high-performance educational platform designed for seamless learning with a world-class UI/UX. Focused on "TradeWithTiger" branding, featuring dark-mode aesthetics, gold/neon gradients, and fluid animations.
+
+## 2. Core Features
+- **Smart Dashboard**: Personalized course recommendations and "Daily Trading Insights" carousel.
+- **Micro-Learning**: Bite-sized video modules optimized for mobile viewing.
+- **Offline Mode**: Encrypted downloads for lessons and resources.
+- **Gamification**: Badges, streaks, and leaderboards to keep learners engaged.
+- **Community Hub**: In-app forums and peer-to-peer chat for collaborative learning.
+- **Secure Payments**: Integration with Stripe/Razorpay/RevenueCat for one-time and subscription models.
+- **Live Sessions**: Integration for live trading webinars or Q&A sessions.
+- **AI Tutor**: Instant AI-powered assistance for course-related queries.
+- **Certificates**: Automatically generated, blockchain-verified completion certificates.
+
+## 3. App Pages
+### Onboarding & Auth
+- **Dynamic Splash Screen**: Logo animation using Rive/Lottie.
+- **Interactive Onboarding**: 3-step carousel explaining app value.
+- **Auth Flow**: Phone OTP, Google/Apple Login with sleek glassmorphism forms.
+
+### Browse & Discover
+- **Home**: Carousel of featured courses, trending categories, and "Top Mentors".
+- **Search & Filter**: Real-time search with chips for sub-niches (e.g., Forex, Crypto, Stocks).
+- **Course Landing Page**: Video trailers, syllabus accordion, mentor bio, and student reviews.
+
+### Learning Experience
+- **Premium Video Player**: Gesture controls, speed adjustment, PIP mode, and landscape lock.
+- **Resource Center**: View and download PDFs, templates, and spreadsheets.
+- **Quizzes & Tests**: Animated interactive quizzes at the end of modules.
+
+### Social & Profile
+- **Global Leaderboard**: Gamified ranking of top learners.
+- **User Profile**: Wallet for tiger-points, earned certificates, and transaction history.
+- **Settings**: Theme switcher (Dark/Light), Notification management.
+
+## 4. UI/UX Design System
+- **Typography**: `Outfit` or `Inter` for a modern, clean look.
+- **Palette**: Dark Charcoal (#121212), Gold (#FFD700), Neon Green (#39FF14) for trading accents.
+- **Animations**: `flutter_animate` for scroll effects, `lottie` for state changes (success/fail).
+- **Icons**: `hugeicons` or `font_awesome_flutter` for a consistent premium feel.
+
+## 5. Recommended Tech Stack (Flutter)
+- **State Management**: `Riverpod` or `Bloc` (Industry standard).
+- **Networking**: `Dio` with interceptors for auth tokens.
+- **Storage**: `Isar` or `Hive` (Fast local database).
+- **Animations**: `flutter_animate`, `lottie`, `rive`.
+- **UI Components**: `carousel_slider`, `smooth_page_indicator`, `shimmer`.
+- **Payments**: `flutter_stripe` or `razorpay_flutter`.
+
+
+flutter run -d 10.43.90.73:5555

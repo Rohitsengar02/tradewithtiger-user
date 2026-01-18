@@ -1,0 +1,44 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // User Profiles:
+    // Keep this secure: Users can only read/write their OWN profile.
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Allow admin to read/write all course data including subcollections
+    // (As requested, set to true to unblock admin features)
+    match /courses/{courseId} {
+      allow read, write: if true;
+      
+      match /lessons/{lessonId} {
+        allow read, write: if true;
+      }
+      
+      match /qa/{questionId} {
+        allow read, write: if true;
+        match /answers/{answerId} {
+           allow read, write: if true;
+        }
+      }
+    }
+    
+    // Allow access to media library
+    match /media/{mediaId} {
+      allow read, write: if true;
+    }
+    
+    // Allow access to application settings (e.g., Home Page configuration)
+    match /settings/{settingId} {
+      allow read, write: if true;
+    }
+    
+    // Default deny all other access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

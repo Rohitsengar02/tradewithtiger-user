@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "557810388802",
+    "project_id": "tradewithtiger-4d569",
+    "storage_bucket": "tradewithtiger-4d569.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:557810388802:android:8ceacdea3ea0835abe02db",
+        "android_client_info": {
+          "package_name": "com.cyberlim.tradewithtiger"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "557810388802-e98a8dsc4h1jbujnlk4cbdhd40j2fdo2.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.cyberlim.tradewithtiger",
+            "certificate_hash": "bfa3718a4766a71c936f1af970062f4c2c4cde00"
+          }
+        },
+        {
+          "client_id": "557810388802-er54nfur2ia0cuphpcuf3doct2sf3n59.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC0TOP7z69q0A_iCgcZfpQqMkBrUKXaOVc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "557810388802-er54nfur2ia0cuphpcuf3doct2sf3n59.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
