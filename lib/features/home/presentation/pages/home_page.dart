@@ -2,18 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:carousel_slider/carousel_slider.dart';
-import 'package:hugeicons/hugeicons.dart';
 import 'package:video_player/video_player.dart';
 import 'package:tradewithtiger/core/theme/app_theme.dart';
 import 'package:tradewithtiger/features/course/presentation/pages/course_details_page.dart';
-import 'package:tradewithtiger/features/course/presentation/pages/explore_courses_page.dart';
-import 'package:tradewithtiger/features/course/presentation/pages/my_learning_page.dart';
-import 'package:tradewithtiger/features/community/presentation/pages/community_feed_page.dart';
-import 'package:tradewithtiger/features/profile/presentation/pages/profile_page.dart';
+// ExploreCoursesPage import removed
+// MyLearningPage, CommunityFeedPage, ProfilePage imports removed as they are no longer in IndexedStack
 import 'package:shimmer/shimmer.dart';
 import 'package:tradewithtiger/core/services/home_page_settings_service.dart';
 import 'package:tradewithtiger/core/services/course_service.dart';
 import 'package:tradewithtiger/main.dart';
+import 'package:tradewithtiger/features/home/presentation/widgets/web_mobile_bottom_bar.dart'; // Added Import
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -23,7 +21,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> with RouteAware {
-  int _activeNavIndex = 0;
+  // _activeNavIndex removed as we don't use tabs anymore
   int _currentCarouselIndex = 0;
   bool _isMuted = true;
   late ScrollController _scrollController;
@@ -130,17 +128,10 @@ class _HomePageState extends State<HomePage> with RouteAware {
       ),
       child: Scaffold(
         backgroundColor: Colors.white,
-        body: IndexedStack(
-          index: _activeNavIndex,
-          children: [
-            _buildHomeContent(),
-            const ExploreCoursesPage(),
-            const MyLearningPage(),
-            const CommunityFeedPage(),
-            const ProfilePage(),
-          ],
-        ),
-        bottomNavigationBar: _buildBottomNavBar(),
+        // Removed IndexedStack, just show Home Content
+        body: _buildHomeContent(),
+        // New Web-Style Bottom Bar
+        bottomNavigationBar: const WebMobileBottomBar(currentRoute: "HOME"),
       ),
     );
   }
@@ -406,8 +397,7 @@ class _HomePageState extends State<HomePage> with RouteAware {
           Positioned.fill(
             child: _HeaderVideoBackground(
               videoUrl: headerVideoUrl,
-              shouldPlay:
-                  _isHeaderVisible && _activeNavIndex == 0 && _isPageOnTop,
+              shouldPlay: _isHeaderVisible && _isPageOnTop,
             ),
           ),
 
@@ -542,7 +532,7 @@ class _HomePageState extends State<HomePage> with RouteAware {
               previewVideo,
               isCenter,
               _isMuted,
-              _activeNavIndex == 0 && _isPageOnTop,
+              _isPageOnTop,
             );
           }).toList(),
         ),
@@ -1653,53 +1643,6 @@ class _HomePageState extends State<HomePage> with RouteAware {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildBottomNavBar() {
-    return Container(
-      margin: const EdgeInsets.all(24),
-      height: 70,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(35),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 30,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          _buildNavItem(HugeIcons.strokeRoundedHome01, 0),
-          _buildNavItem(HugeIcons.strokeRoundedBookOpen01, 1),
-          _buildNavItem(HugeIcons.strokeRoundedLibrary, 2),
-          _buildNavItem(HugeIcons.strokeRoundedUserGroup, 3),
-          _buildNavItem(HugeIcons.strokeRoundedUser, 4),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNavItem(List<List<dynamic>> icon, int index) {
-    bool isSelected = _activeNavIndex == index;
-    return GestureDetector(
-      onTap: () => setState(() => _activeNavIndex = index),
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF4A89FF) : Colors.transparent,
-          shape: BoxShape.circle,
-        ),
-        child: HugeIcon(
-          icon: icon,
-          color: isSelected ? Colors.white : AppTheme.textGrey,
-          size: 24,
-        ),
       ),
     );
   }
