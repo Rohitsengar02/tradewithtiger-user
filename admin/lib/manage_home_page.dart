@@ -427,7 +427,8 @@ class _ManageHomePageState extends State<ManageHomePage>
                 ).withValues(alpha: 0.2),
               ),
               child: Icon(
-                IconData(item['icon'], fontFamily: 'MaterialIcons'),
+                Icons
+                    .layers, // Dynamic IconData(item['icon']) breaks web build tree-shaking
                 color: Color(item['color'] ?? 0xFF4A89FF),
               ),
             ),
