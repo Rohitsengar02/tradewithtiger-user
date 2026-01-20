@@ -6,6 +6,7 @@ import 'package:tradewithtiger/core/services/course_service.dart';
 import 'package:shimmer/shimmer.dart';
 // import 'package:tradewithtiger/features/profile/presentation/pages/profile_page.dart'; // Removed
 // import 'package:tradewithtiger/features/course/presentation/pages/my_courses_page.dart'; // Removed
+import 'package:tradewithtiger/features/home/presentation/widgets/web_mobile_bottom_bar.dart';
 import 'package:tradewithtiger/features/home/presentation/widgets/web_sidebar.dart';
 
 class ExploreCoursesPage extends StatefulWidget {
@@ -97,6 +98,7 @@ class _ExploreCoursesPageState extends State<ExploreCoursesPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
+      bottomNavigationBar: const WebMobileBottomBar(currentRoute: "SHOP"),
       body: LayoutBuilder(
         builder: (context, constraints) {
           if (constraints.maxWidth > 900) {

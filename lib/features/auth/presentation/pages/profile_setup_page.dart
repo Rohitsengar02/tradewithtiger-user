@@ -8,6 +8,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:tradewithtiger/core/services/cloudinary_service.dart';
 import 'dart:io';
 import 'package:flutter/foundation.dart'; // for kIsWeb
+import 'package:tradewithtiger/features/home/presentation/pages/web_home_page.dart';
 
 class ProfileSetupPage extends StatefulWidget {
   const ProfileSetupPage({super.key});
@@ -97,10 +98,17 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
             .update(data);
 
         if (mounted) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const HomePage()),
-          );
+          if (kIsWeb && MediaQuery.of(context).size.width > 900) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const WebHomePage()),
+            );
+          } else {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const HomePage()),
+            );
+          }
         }
       }
     } catch (e) {

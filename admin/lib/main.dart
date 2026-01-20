@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
+import 'dashboard_page.dart';
 import 'courses_page.dart';
 import 'create_course_page.dart';
 import 'reports_page.dart';
@@ -14,7 +15,9 @@ import 'settings_page.dart';
 import 'manage_home_page.dart';
 
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'login_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -73,7 +76,55 @@ class TismAdminApp extends StatelessWidget {
               ThemeData.dark().textTheme,
             ),
           ),
-          home: const AdminConnectBoard(),
+          home: StreamBuilder<User?>(
+            stream: FirebaseAuth.instance.authStateChanges(),
+            builder: (context, snapshot) {
+              if (snapshot.hasError) {
+                return Scaffold(
+                  body: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Iconsax.warning_2,
+                          size: 60,
+                          color: Colors.orange,
+                        ),
+                        const SizedBox(height: 16),
+                        const Text(
+                          "System Update Required",
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          "New features have been installed.\nPlease strictly STOP and RESTART the app.",
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 24),
+                        ElevatedButton.icon(
+                          onPressed: () {},
+                          icon: const Icon(Icons.refresh),
+                          label: const Text("I have restarted"),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Scaffold(
+                  body: Center(child: CircularProgressIndicator()),
+                );
+              }
+              if (snapshot.hasData) {
+                return const AdminConnectBoard();
+              }
+              return const LoginPage();
+            },
+          ),
         );
       },
     );
@@ -209,12 +260,6 @@ class _AdminConnectBoardState extends State<AdminConnectBoard> {
                       isDark,
                     ),
                     _buildMobileMenuItem(
-                      1,
-                      "Reports",
-                      Iconsax.chart_21,
-                      isDark,
-                    ),
-                    _buildMobileMenuItem(
                       2,
                       "Courses",
                       Iconsax.video_play,
@@ -225,24 +270,6 @@ class _AdminConnectBoardState extends State<AdminConnectBoard> {
                       4,
                       "Transactions",
                       Iconsax.card,
-                      isDark,
-                    ),
-                    _buildMobileMenuItem(
-                      5,
-                      "Invoices",
-                      Iconsax.receipt,
-                      isDark,
-                    ),
-                    _buildMobileMenuItem(
-                      7,
-                      "Feedback",
-                      Iconsax.message_question,
-                      isDark,
-                    ),
-                    _buildMobileMenuItem(
-                      6,
-                      "Settings",
-                      Iconsax.setting_2,
                       isDark,
                     ),
                   ],
@@ -343,46 +370,7 @@ class _AdminConnectBoardState extends State<AdminConnectBoard> {
     if (_selectedIndex == 8) return const ManageHomePage();
 
     if (_selectedIndex == 0) {
-      return SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildStatsGrid(isDesktop, isTablet),
-            const SizedBox(height: 24),
-            if (isDesktop)
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(flex: 2, child: _buildSalesReportsChart()),
-                  const SizedBox(width: 24),
-                  Expanded(flex: 1, child: _buildProductStatisticChart()),
-                ],
-              )
-            else ...[
-              _buildSalesReportsChart(),
-              const SizedBox(height: 24),
-              _buildProductStatisticChart(),
-            ],
-            const SizedBox(height: 24),
-            if (isDesktop)
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(flex: 1, child: _buildCustomerGrowthChart()),
-                  const SizedBox(width: 24),
-                  // Placeholder for another widget or list
-                  Expanded(flex: 2, child: _buildRecentTransactionsTable()),
-                ],
-              )
-            else ...[
-              _buildCustomerGrowthChart(),
-              const SizedBox(height: 24),
-              _buildRecentTransactionsTable(),
-            ],
-          ],
-        ),
-      );
+      return const DashboardPage();
     }
 
     return const Center(child: Text("Coming Soon"));
@@ -433,24 +421,54 @@ class _AdminConnectBoardState extends State<AdminConnectBoard> {
                   const SizedBox(height: 48),
                   _buildMenuSection("MENU", [
                     _buildMenuItem(0, "Dashboard", Iconsax.element_4),
-                    _buildMenuItem(1, "Reports", Iconsax.chart_21),
                     _buildMenuItem(2, "Courses", Iconsax.video_play),
                     _buildMenuItem(3, "Students", Iconsax.people),
                   ]),
                   const SizedBox(height: 24),
                   _buildMenuSection("FINANCIAL", [
                     _buildMenuItem(4, "Transactions", Iconsax.card),
-                    _buildMenuItem(5, "Invoices", Iconsax.receipt),
                   ]),
                   const SizedBox(height: 24),
                   const SizedBox(height: 24),
                   _buildMenuSection("TOOLS", [
-                    _buildMenuItem(6, "Settings", Iconsax.setting_2),
-                    _buildMenuItem(7, "Feedback", Iconsax.message_question),
                     _buildMenuItem(8, "Home Builder", Iconsax.home_hashtag),
                   ]),
                   const SizedBox(height: 24),
                   _buildThemeToggle(),
+                  const SizedBox(height: 24),
+                  GestureDetector(
+                    onTap: () async {
+                      await FirebaseAuth.instance.signOut();
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.red.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Iconsax.logout,
+                            color: Colors.red,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 12),
+                          const Text(
+                            "Logout",
+                            style: TextStyle(
+                              color: Colors.red,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                   const SizedBox(height: 32),
                   _buildUpgradeCard(),
                 ],
@@ -613,769 +631,6 @@ class _AdminConnectBoardState extends State<AdminConnectBoard> {
                 "Upgrade Now",
                 style: TextStyle(color: Colors.white, fontSize: 12),
               ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatsGrid(bool isDesktop, bool isTablet) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        List<Widget> cards = [
-          _buildStatCard(
-            title: "Total Sales",
-            value: "₹612,917",
-            subtitle: "Sales vs last month",
-            percentage: "+2.08%",
-            icon: Iconsax.wallet_2,
-            isPrimary: true,
-          ),
-          _buildStatCard(
-            title: "Total Orders",
-            value: "34,760",
-            subtitle: "Orders vs last month",
-            percentage: "+12.4%",
-            icon: Iconsax.box,
-            isPrimary: false,
-          ),
-          _buildStatCard(
-            title: "Active Users",
-            value: "14,987",
-            subtitle: "Users vs last month",
-            percentage: "-2.08%",
-            isNegative: true,
-            icon: Iconsax.profile_2user,
-            isPrimary: false,
-          ),
-          _buildStatCard(
-            title: "Sold Courses",
-            value: "12,987",
-            subtitle: "Courses vs last month",
-            percentage: "+12.1%",
-            icon: Iconsax.book_1,
-            isPrimary: false,
-          ),
-        ];
-
-        if (constraints.maxWidth < 700) {
-          return Column(
-            children: cards
-                .map(
-                  (e) => Padding(
-                    padding: const EdgeInsets.only(bottom: 16),
-                    child: e,
-                  ),
-                )
-                .toList(),
-          );
-        } else {
-          return Row(
-            children: cards
-                .map(
-                  (e) => Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                      child: e,
-                    ),
-                  ),
-                )
-                .toList(),
-          );
-        }
-      },
-    );
-  }
-
-  Widget _buildStatCard({
-    required String title,
-    required String value,
-    required String subtitle,
-    required String percentage,
-    required IconData icon,
-    bool isPrimary = false,
-    bool isNegative = false,
-  }) {
-    final bool isDark = Theme.of(context).brightness == Brightness.dark;
-    final Color cardBg = isPrimary
-        ? const Color(0xFF4A89FF)
-        : (isDark ? const Color(0xFF2C2C3E) : Colors.white);
-
-    final Color textColor = isPrimary
-        ? Colors.white
-        : (isDark ? Colors.white : const Color(0xFF1A1A2E));
-
-    final Color subTextColor = isPrimary
-        ? Colors.white.withValues(alpha: 0.6)
-        : (isDark ? Colors.white54 : Colors.grey[400]!);
-
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: cardBg,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          if (!isPrimary && !isDark)
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.02),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: isPrimary
-                      ? Colors.white.withValues(alpha: 0.2)
-                      : (isDark
-                            ? Colors.white.withValues(alpha: 0.05)
-                            : const Color(0xFFF5F6FA)),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  icon,
-                  color: isPrimary
-                      ? Colors.white
-                      : (isDark ? Colors.white : const Color(0xFF1A1A2E)),
-                  size: 20,
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: isNegative
-                      ? (isPrimary
-                            ? Colors.white.withValues(alpha: 0.2)
-                            : const Color(0xFFFF6D6D).withValues(alpha: 0.1))
-                      : (isPrimary
-                            ? Colors.white.withValues(alpha: 0.2)
-                            : const Color(0xFF00B087).withValues(alpha: 0.1)),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  percentage,
-                  style: TextStyle(
-                    color: isPrimary
-                        ? Colors.white
-                        : (isNegative
-                              ? const Color(0xFFFF6D6D)
-                              : const Color(0xFF00B087)),
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          Text(
-            title,
-            style: TextStyle(
-              color: isPrimary
-                  ? Colors.white.withValues(alpha: 0.8)
-                  : (isDark ? Colors.white60 : Colors.grey[500]),
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: TextStyle(
-              color: textColor,
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(subtitle, style: TextStyle(color: subTextColor, fontSize: 12)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSalesReportsChart() {
-    final bool isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      height: 350,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF2C2C3E) : Colors.white,
-        borderRadius: BorderRadius.circular(24),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    "Customer Habits",
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: isDark ? Colors.white : const Color(0xFF1A1A2E),
-                    ),
-                  ),
-                  Text(
-                    "Track your customer habits",
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: isDark ? Colors.white54 : Colors.grey,
-                    ),
-                  ),
-                ],
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  border: Border.all(
-                    color: isDark ? Colors.white10 : Colors.grey[200]!,
-                  ),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  children: [
-                    Text(
-                      "This year",
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: isDark ? Colors.white70 : Colors.grey[600],
-                      ),
-                    ),
-                    const Icon(
-                      Icons.keyboard_arrow_down,
-                      size: 16,
-                      color: Colors.grey,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 32),
-          Expanded(
-            child: BarChart(
-              BarChartData(
-                alignment: BarChartAlignment.spaceAround,
-                maxY: 60,
-                barTouchData: BarTouchData(
-                  touchTooltipData: BarTouchTooltipData(
-                    getTooltipColor: (_) => const Color(0xFF1A1A2E),
-                    getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                      return BarTooltipItem(
-                        rod.toY.round().toString(),
-                        const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      );
-                    },
-                  ),
-                ),
-                titlesData: FlTitlesData(
-                  show: true,
-                  bottomTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      getTitlesWidget: (value, meta) {
-                        const titles = [
-                          'Jan',
-                          'Feb',
-                          'Mar',
-                          'Apr',
-                          'May',
-                          'Jun',
-                          'Jul',
-                        ];
-                        if (value.toInt() < titles.length) {
-                          return Padding(
-                            padding: const EdgeInsets.only(top: 8.0),
-                            child: Text(
-                              titles[value.toInt()],
-                              style: TextStyle(
-                                color: isDark
-                                    ? Colors.white54
-                                    : Colors.grey[400],
-                                fontSize: 12,
-                              ),
-                            ),
-                          );
-                        }
-                        return const Text('');
-                      },
-                    ),
-                  ),
-                  leftTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      reservedSize: 30,
-                      interval: 20,
-                      getTitlesWidget: (value, meta) {
-                        return Text(
-                          "${value.toInt()}K",
-                          style: TextStyle(
-                            color: isDark ? Colors.white24 : Colors.grey[300],
-                            fontSize: 10,
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                  topTitles: const AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
-                  ),
-                  rightTitles: const AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
-                  ),
-                ),
-                gridData: FlGridData(
-                  show: true,
-                  drawVerticalLine: false,
-                  horizontalInterval: 20,
-                  getDrawingHorizontalLine: (value) => FlLine(
-                    color: isDark
-                        ? Colors.white.withValues(alpha: 0.05)
-                        : Colors.grey[100],
-                    strokeWidth: 1,
-                  ),
-                ),
-                borderData: FlBorderData(show: false),
-                barGroups: [
-                  _makeBarGroup(0, 30, 20),
-                  _makeBarGroup(1, 45, 35),
-                  _makeBarGroup(2, 28, 42),
-                  _makeBarGroup(3, 15, 30),
-                  _makeBarGroup(4, 55, 48), // Highlight
-                  _makeBarGroup(5, 38, 25),
-                  _makeBarGroup(6, 42, 32),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  BarChartGroupData _makeBarGroup(int x, double y1, double y2) {
-    return BarChartGroupData(
-      x: x,
-      barRods: [
-        BarChartRodData(
-          toY: y1,
-          color: const Color(0xFFE0E0E0),
-          width: 12,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(6)),
-        ),
-        BarChartRodData(
-          toY: y2,
-          color: const Color(0xFF4A89FF),
-          width: 12,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(6)),
-        ),
-      ],
-      barsSpace: 4,
-    );
-  }
-
-  Widget _buildProductStatisticChart() {
-    final bool isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      height: 350,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF2C2C3E) : Colors.white,
-        borderRadius: BorderRadius.circular(24),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            "Course Categories",
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: isDark ? Colors.white : const Color(0xFF1A1A2E),
-            ),
-          ),
-          Text(
-            "Students by interest",
-            style: TextStyle(
-              fontSize: 12,
-              color: isDark ? Colors.white54 : Colors.grey,
-            ),
-          ),
-          const SizedBox(height: 32),
-          Expanded(
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                PieChart(
-                  PieChartData(
-                    sectionsSpace: 0,
-                    centerSpaceRadius: 60,
-                    startDegreeOffset: -90,
-                    sections: [
-                      PieChartSectionData(
-                        color: const Color(0xFF4A89FF),
-                        value: 40,
-                        title: '',
-                        radius: 20,
-                      ),
-                      PieChartSectionData(
-                        color: const Color(0xFFFF6D6D),
-                        value: 30,
-                        title: '',
-                        radius: 15,
-                      ),
-                      PieChartSectionData(
-                        color: const Color(0xFF00B087),
-                        value: 15,
-                        title: '',
-                        radius: 15,
-                      ),
-                      PieChartSectionData(
-                        color: isDark ? Colors.white10 : Colors.grey[200],
-                        value: 15,
-                        title: '',
-                        radius: 12,
-                      ),
-                    ],
-                  ),
-                ),
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      "9,829",
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: isDark ? Colors.white : const Color(0xFF1A1A2E),
-                      ),
-                    ),
-                    Text(
-                      "Total Students",
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: isDark ? Colors.white54 : Colors.grey,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 4,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFE5F7F2),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: const Text(
-                        "+5.34%",
-                        style: TextStyle(
-                          fontSize: 10,
-                          color: Color(0xFF00B087),
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 24),
-          _buildLegendItem(
-            "Trading",
-            "2,487",
-            "+1.8%",
-            const Color(0xFF4A89FF),
-          ),
-          const SizedBox(height: 12),
-          _buildLegendItem("Crypto", "1,828", "+2.3%", const Color(0xFFFF6D6D)),
-          const SizedBox(height: 12),
-          _buildLegendItem(
-            "Options",
-            "1,463",
-            "-0.4%",
-            const Color(0xFF00B087),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCustomerGrowthChart() {
-    final bool isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF2C2C3E) : Colors.white,
-        borderRadius: BorderRadius.circular(24),
-      ),
-      height: 300,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            "Student Locations",
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: isDark ? Colors.white : const Color(0xFF1A1A2E),
-            ),
-          ),
-          Text(
-            "Global reach",
-            style: TextStyle(
-              fontSize: 12,
-              color: isDark ? Colors.white54 : Colors.grey,
-            ),
-          ),
-          const SizedBox(height: 24),
-          Row(
-            children: [
-              SizedBox(
-                height: 150,
-                width: 150,
-                child: PieChart(
-                  PieChartData(
-                    sections: [
-                      PieChartSectionData(
-                        value: 40,
-                        color: const Color(0xFF4A89FF),
-                        title: '40%',
-                        radius: 50,
-                        titleStyle: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      PieChartSectionData(
-                        value: 30,
-                        color: const Color(0xFF6C63FF),
-                        title: '30%',
-                        radius: 45,
-                        titleStyle: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      PieChartSectionData(
-                        value: 15,
-                        color: const Color(0xFFFF9F43),
-                        title: '15%',
-                        radius: 40,
-                        titleStyle: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      PieChartSectionData(
-                        value: 15,
-                        color: const Color(0xFFFF6D6D),
-                        title: '15%',
-                        radius: 40,
-                        titleStyle: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(width: 24),
-              Expanded(
-                child: Column(
-                  children: [
-                    _buildCountryLegend("India", const Color(0xFF4A89FF)),
-                    const SizedBox(height: 8),
-                    _buildCountryLegend("USA", const Color(0xFF6C63FF)),
-                    const SizedBox(height: 8),
-                    _buildCountryLegend("UAE", const Color(0xFFFF9F43)),
-                    const SizedBox(height: 8),
-                    _buildCountryLegend("UK", const Color(0xFFFF6D6D)),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCountryLegend(String country, Color color) {
-    final bool isDark = Theme.of(context).brightness == Brightness.dark;
-    return Row(
-      children: [
-        Container(
-          width: 12,
-          height: 12,
-          decoration: BoxDecoration(shape: BoxShape.circle, color: color),
-        ),
-        const SizedBox(width: 8),
-        Text(
-          country,
-          style: TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 13,
-            color: isDark ? Colors.white70 : Colors.black87,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildLegendItem(
-    String title,
-    String value,
-    String percent,
-    Color color,
-  ) {
-    final bool isDark = Theme.of(context).brightness == Brightness.dark;
-    return Row(
-      children: [
-        Icon(Iconsax.flash, size: 16, color: color),
-        const SizedBox(width: 8),
-        Text(
-          title,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: isDark ? Colors.white70 : Colors.black87,
-          ),
-        ),
-        const Spacer(),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-            color: isDark ? Colors.white : Colors.black,
-          ),
-        ),
-        const SizedBox(width: 8),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-          decoration: BoxDecoration(
-            color: percent.startsWith('+')
-                ? const Color(0xFFE5F7F2)
-                : const Color(0xFFFFEBEE),
-            borderRadius: BorderRadius.circular(4),
-          ),
-          child: Text(
-            percent,
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.bold,
-              color: percent.startsWith('+')
-                  ? const Color(0xFF00B087)
-                  : const Color(0xFFFF6D6D),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildRecentTransactionsTable() {
-    final bool isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF2C2C3E) : Colors.white,
-        borderRadius: BorderRadius.circular(24),
-      ),
-      height: 300,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            "Recent Transactions",
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: isDark ? Colors.white : const Color(0xFF1A1A2E),
-            ),
-          ),
-          const SizedBox(height: 16),
-          Expanded(
-            child: ListView.separated(
-              itemCount: 5,
-              separatorBuilder: (_, _) => Divider(
-                height: 1,
-                color: isDark ? Colors.white10 : Colors.grey[200],
-              ),
-              itemBuilder: (context, index) {
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 12.0),
-                  child: Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 16,
-                        backgroundColor: isDark
-                            ? Colors.white.withValues(alpha: 0.1)
-                            : const Color(0xFFF5F6FA),
-                        child: const Icon(
-                          Iconsax.receipt,
-                          size: 16,
-                          color: Colors.grey,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            "Student #102$index",
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: isDark ? Colors.white : Colors.black,
-                            ),
-                          ),
-                          Text(
-                            "Pro Bundle",
-                            style: TextStyle(
-                              fontSize: 10,
-                              color: isDark ? Colors.white54 : Colors.grey,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const Spacer(),
-                      const Text(
-                        "₹14,999",
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF00B087),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
             ),
           ),
         ],

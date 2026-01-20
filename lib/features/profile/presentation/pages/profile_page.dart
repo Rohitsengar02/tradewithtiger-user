@@ -12,6 +12,7 @@ import 'package:tradewithtiger/features/community/presentation/widgets/community
 import 'package:tradewithtiger/features/profile/presentation/pages/legal/about_us_page.dart';
 import 'package:tradewithtiger/features/profile/presentation/pages/legal/help_support_page.dart';
 import 'package:tradewithtiger/features/profile/presentation/pages/legal/privacy_policy_page.dart';
+import 'package:tradewithtiger/features/home/presentation/widgets/web_mobile_bottom_bar.dart';
 import 'package:tradewithtiger/features/profile/presentation/pages/legal/return_refund_page.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -29,6 +30,7 @@ class _ProfilePageState extends State<ProfilePage> {
     if (user == null) {
       return Scaffold(
         backgroundColor: Colors.white,
+        bottomNavigationBar: const WebMobileBottomBar(currentRoute: "PROFILE"),
         body: LayoutBuilder(
           builder: (context, constraints) {
             if (constraints.maxWidth > 900) {
@@ -67,6 +69,9 @@ class _ProfilePageState extends State<ProfilePage> {
 
         return Scaffold(
           backgroundColor: Colors.white,
+          bottomNavigationBar: const WebMobileBottomBar(
+            currentRoute: "PROFILE",
+          ),
           body: LayoutBuilder(
             builder: (context, constraints) {
               if (constraints.maxWidth > 900) {

@@ -7,6 +7,8 @@ import 'package:tradewithtiger/core/services/video_preload_service.dart';
 import 'package:tradewithtiger/features/home/presentation/pages/home_page.dart';
 import 'package:tradewithtiger/features/auth/presentation/pages/signup_page.dart';
 import 'package:video_player/video_player.dart';
+import 'package:flutter/foundation.dart'; // for kIsWeb
+import 'package:tradewithtiger/features/home/presentation/pages/web_home_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -67,101 +69,203 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Widget _buildDesktopLayout() {
-    return Stack(
+    return Row(
       children: [
-        // Fullscreen Video Background
-        Positioned.fill(
-          child: _isVideoInitialized && _videoController != null
-              ? FittedBox(
-                  fit: BoxFit.cover,
-                  child: SizedBox(
-                    width: _videoController!.value.size.width,
-                    height: _videoController!.value.size.height,
-                    child: VideoPlayer(_videoController!),
+        // Left Side: Animated Gradient & Hero Content
+        Expanded(
+          flex: 6,
+          child:
+              Container(
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          Color(0xFF6366F1),
+                          Color(0xFF8B5CF6),
+                          Color(0xFFEC4899),
+                        ],
+                      ),
+                    ),
+                    child: Stack(
+                      children: [
+                        // Animated Shapes Overlay
+                        Positioned.fill(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: [
+                                  Colors.transparent,
+                                  Colors.black.withOpacity(0.3),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        Positioned(
+                          top: 50,
+                          left: 50,
+                          child: GestureDetector(
+                            onTap: () => Navigator.pop(context),
+                            child: Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: const BoxDecoration(
+                                color: Colors.white24,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.arrow_back_ios_new_rounded,
+                                color: Colors.white,
+                                size: 20,
+                              ),
+                            ),
+                          ),
+                        ),
+                        // Hero Content
+                        Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(
+                                Icons.trending_up,
+                                size: 80,
+                                color: Colors.white,
+                              ).animate().scale(
+                                duration: 600.ms,
+                                curve: Curves.elasticOut,
+                              ),
+                              const SizedBox(height: 24),
+                              Text(
+                                "Trade With Tiger",
+                                style: const TextStyle(
+                                  fontSize: 40,
+                                  fontWeight: FontWeight.w900,
+                                  color: Colors.white,
+                                  letterSpacing: 2,
+                                ),
+                              ).animate().fadeIn().slideY(begin: 0.3),
+                              const SizedBox(height: 16),
+                              Text(
+                                "Master the markets with confidence.",
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  color: Colors.white.withOpacity(0.9),
+                                  letterSpacing: 0.5,
+                                ),
+                              ).animate().fadeIn(delay: 200.ms),
+                              const SizedBox(height: 48),
+                              // Sign Up Call to Action on Left
+                              Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 32,
+                                      vertical: 24,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(20),
+                                      border: Border.all(color: Colors.white24),
+                                    ),
+                                    child: Column(
+                                      children: [
+                                        const Text(
+                                          "New Here?",
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 12),
+                                        OutlinedButton(
+                                          onPressed: () {
+                                            Navigator.pushReplacement(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) =>
+                                                    const SignUpPage(),
+                                              ),
+                                            );
+                                          },
+                                          style: OutlinedButton.styleFrom(
+                                            foregroundColor: Colors.white,
+                                            side: const BorderSide(
+                                              color: Colors.white,
+                                              width: 2,
+                                            ),
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 32,
+                                              vertical: 16,
+                                            ),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(30),
+                                            ),
+                                          ),
+                                          child: const Text(
+                                            "CREATE ACCOUNT",
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              letterSpacing: 1,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  )
+                                  .animate()
+                                  .fadeIn(delay: 400.ms)
+                                  .slideY(begin: 0.2),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                  .animate(onPlay: (c) => c.repeat(reverse: true))
+                  .tint(
+                    color: const Color(0xFF4F46E5).withOpacity(0.2),
+                    duration: 3.seconds,
                   ),
-                )
-              : Container(color: const Color(0xFFA5A6F6).withOpacity(0.1)),
-        ),
-        // Overlay to dim video with Gradient
-        Positioned.fill(
-          child: Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  const Color(0xFF6366F1).withOpacity(0.3),
-                  Colors.black.withOpacity(0.8),
-                ],
-              ),
-            ),
-          ),
         ),
 
-        // Centered Login Card
-        Center(
+        // Right Side: Login Form (Credentials)
+        Expanded(
+          flex: 4,
           child: Container(
-            constraints: const BoxConstraints(maxWidth: 450),
-            padding: const EdgeInsets.all(40),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.95),
-              borderRadius: BorderRadius.circular(24),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 30,
-                  offset: const Offset(0, 15),
-                ),
-              ],
-              border: Border.all(color: Colors.white, width: 2),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  "Welcome Back",
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.w900,
-                    color: Color(0xFF1E1E2D),
-                    letterSpacing: -0.5,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                const Text(
-                  "Login to continue your trading journey.",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey,
-                    height: 1.5,
-                  ),
-                ),
-                const SizedBox(height: 40),
-                _buildGoogleButton(),
-                const SizedBox(height: 24),
-                _buildFooterLink(),
-              ],
-            ),
-          ),
-        ),
+            color: Colors.white,
+            child: Center(
+              child: Container(
+                constraints: const BoxConstraints(maxWidth: 450),
+                padding: const EdgeInsets.all(40),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      "Welcome Back",
+                      style: TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.w900,
+                        color: Color(0xFF1E1E2D),
+                        letterSpacing: -0.5,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    const Text(
+                      "Please enter your details.",
+                      style: TextStyle(fontSize: 16, color: Colors.grey),
+                    ),
+                    const SizedBox(height: 48),
 
-        // Back Button
-        Positioned(
-          top: 30,
-          left: 30,
-          child: GestureDetector(
-            onTap: () => Navigator.pop(context),
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.arrow_back_ios_new_rounded,
-                color: Colors.black,
-                size: 20,
+                    // Google Login Button (Main Credential)
+                    _buildGoogleButton(),
+
+                    const SizedBox(height: 32),
+                    // Removed the Footer Link from here as it's now on the left
+                  ],
+                ).animate().fadeIn().slideX(begin: 0.1),
               ),
             ),
           ),
@@ -307,10 +411,19 @@ class _LoginPageState extends State<LoginPage> {
               final isComplete = userDoc.data()?['isProfileComplete'] ?? false;
 
               if (isComplete) {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => const HomePage()),
-                );
+                if (kIsWeb && MediaQuery.of(context).size.width > 900) {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const WebHomePage(),
+                    ),
+                  );
+                } else {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => const HomePage()),
+                  );
+                }
               } else {
                 Navigator.pushReplacement(
                   context,

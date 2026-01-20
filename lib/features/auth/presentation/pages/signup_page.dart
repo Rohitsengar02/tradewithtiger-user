@@ -7,6 +7,8 @@ import 'package:video_player/video_player.dart';
 
 import 'package:tradewithtiger/core/services/video_preload_service.dart';
 import 'package:tradewithtiger/features/home/presentation/pages/home_page.dart';
+import 'package:flutter/foundation.dart';
+import 'package:tradewithtiger/features/home/presentation/pages/web_home_page.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -67,101 +69,206 @@ class _SignUpPageState extends State<SignUpPage> {
   }
 
   Widget _buildDesktopLayout() {
-    return Stack(
+    return Row(
       children: [
-        // Fullscreen Video Background
-        Positioned.fill(
-          child: _isVideoInitialized && _videoController != null
-              ? FittedBox(
-                  fit: BoxFit.cover,
-                  child: SizedBox(
-                    width: _videoController!.value.size.width,
-                    height: _videoController!.value.size.height,
-                    child: VideoPlayer(_videoController!),
-                  ),
-                )
-              : Container(color: const Color(0xFFA5A6F6).withOpacity(0.1)),
-        ),
-        // Overlay with Gradient
-        Positioned.fill(
+        // Left Side: Animated Gradient & Hero Content
+        Expanded(
+          flex: 6,
           child: Container(
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
                 colors: [
-                  const Color(0xFF6366F1).withOpacity(0.3),
-                  Colors.black.withOpacity(0.8),
+                  Color(0xFF6366F1),
+                  Color(0xFF8B5CF6),
+                  Color(0xFFEC4899),
                 ],
               ),
             ),
-          ),
-        ),
-
-        // Centered Card
-        Center(
-          child: Container(
-            constraints: const BoxConstraints(maxWidth: 450),
-            padding: const EdgeInsets.all(40),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.95),
-              borderRadius: BorderRadius.circular(24),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 30,
-                  offset: const Offset(0, 15),
-                ),
-              ],
-              border: Border.all(color: Colors.white, width: 2),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
+            child: Stack(
               children: [
-                const Text(
-                  "Create Account",
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.w900,
-                    color: Color(0xFF1E1E2D),
-                    letterSpacing: -0.5,
+                Positioned.fill(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.transparent,
+                          Colors.black.withOpacity(0.3),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
-                const SizedBox(height: 16),
-                const Text(
-                  "Join us to start learning trading strategies today.",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey,
-                    height: 1.5,
+                Positioned(
+                  top: 50,
+                  left: 50,
+                  child: GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: const BoxDecoration(
+                        color: Colors.white24,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.arrow_back_ios_new_rounded,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                    ),
                   ),
                 ),
-                const SizedBox(height: 40),
-                _buildGoogleButton(),
-                const SizedBox(height: 24),
-                _buildFooterLink(),
+                Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(
+                        Icons.rocket_launch_rounded,
+                        size: 80,
+                        color: Colors.white,
+                      ).animate().scale(
+                        duration: 600.ms,
+                        curve: Curves.elasticOut,
+                      ),
+                      const SizedBox(height: 24),
+                      Text(
+                        "Join the Revolution",
+                        style: const TextStyle(
+                          fontSize: 40,
+                          fontWeight: FontWeight.w900,
+                          color: Colors.white,
+                          letterSpacing: 2,
+                        ),
+                      ).animate().fadeIn().slideY(begin: 0.3),
+                      const SizedBox(height: 16),
+                      Text(
+                        "Start your journey to financial freedom.",
+                        style: TextStyle(
+                          fontSize: 18,
+                          color: Colors.white.withOpacity(0.9),
+                          letterSpacing: 0.5,
+                        ),
+                      ).animate().fadeIn(delay: 200.ms),
+                      const SizedBox(height: 48),
+                      // Login Call to Action on Left
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 32,
+                          vertical: 24,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: Colors.white24),
+                        ),
+                        child: Column(
+                          children: [
+                            const Text(
+                              "Already a Member?",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            OutlinedButton(
+                              onPressed: () {
+                                Navigator.pop(
+                                  context,
+                                ); // Go back to login if came from there, or push login
+                                // Just in case, explicit push replacement
+                                // Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const LoginPage()));
+                                // Actually better to just pop if we assume a stack, but safer to pushReplacement to swap pages.
+                                // However, Login is usually the 'base' or they are siblings.
+                                // Let's use pushReplacement to be safe and consistent with login page logic.
+                                // But wait, LoginPage is likely imported. Let's check imports.
+                                // SignUpPage imports LoginPage? No, LoginPage imports SignUpPage.
+                                // SignUpPage usually navigated TO from Login. So pop is often enough.
+                                // But if user landed here directly?
+                                // Let's try pop first, if can't pop, push login.
+                                if (Navigator.canPop(context)) {
+                                  Navigator.pop(context);
+                                } else {
+                                  // We need to import LoginPage if we do this.
+                                  // Let's assume standard flow for now or use named routes if available,
+                                  // but avoiding new dependencies.
+                                  // I'll stick to pop for "Back" behavior or just simple Pop since usually Login -> Signup.
+                                  // BUT, user might want to switch.
+                                  // Let's just use pop.
+                                  Navigator.pop(context);
+                                }
+                              },
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: Colors.white,
+                                side: const BorderSide(
+                                  color: Colors.white,
+                                  width: 2,
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 32,
+                                  vertical: 16,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(30),
+                                ),
+                              ),
+                              child: const Text(
+                                "LOGIN HERE",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 1,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.2),
+                    ],
+                  ),
+                ),
               ],
             ),
-          ),
+          ).animate(onPlay: (c) => c.repeat(reverse: true)).tint(color: const Color(0xFFEC4899).withOpacity(0.2), duration: 3.seconds),
         ),
 
-        // Back Button
-        Positioned(
-          top: 30,
-          left: 30,
-          child: GestureDetector(
-            onTap: () => Navigator.pop(context),
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.arrow_back_ios_new_rounded,
-                color: Colors.black,
-                size: 20,
+        // Right Side: Sign Up Form
+        Expanded(
+          flex: 4,
+          child: Container(
+            color: Colors.white,
+            child: Center(
+              child: Container(
+                constraints: const BoxConstraints(maxWidth: 450),
+                padding: const EdgeInsets.all(40),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      "Create Account",
+                      style: TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.w900,
+                        color: Color(0xFF1E1E2D),
+                        letterSpacing: -0.5,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    const Text(
+                      "Join the community today.",
+                      style: TextStyle(fontSize: 16, color: Colors.grey),
+                    ),
+                    const SizedBox(height: 48),
+
+                    _buildGoogleButton(),
+
+                    const SizedBox(height: 32),
+                  ],
+                ).animate().fadeIn().slideX(begin: 0.1),
               ),
             ),
           ),
@@ -306,10 +413,19 @@ class _SignUpPageState extends State<SignUpPage> {
               final isComplete = userDoc.data()?['isProfileComplete'] ?? false;
 
               if (isComplete) {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => const HomePage()),
-                );
+                if (kIsWeb && MediaQuery.of(context).size.width > 900) {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const WebHomePage(),
+                    ),
+                  );
+                } else {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => const HomePage()),
+                  );
+                }
               } else {
                 Navigator.pushReplacement(
                   context,

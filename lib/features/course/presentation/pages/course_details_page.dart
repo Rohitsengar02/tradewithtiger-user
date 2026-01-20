@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart'; // Added here
 import 'package:hugeicons/hugeicons.dart';
 import 'package:tradewithtiger/features/course/presentation/pages/course_video_page.dart';
 import 'package:tradewithtiger/features/home/presentation/widgets/web_sidebar.dart';
@@ -34,6 +35,22 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
         return;
       }
 
+      // 1. Check if user is enrolled
+      bool isEnrolled = false;
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        final enrollmentDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .collection('enrolled_courses')
+            .doc(courseId)
+            .get();
+        if (enrollmentDoc.exists) {
+          isEnrolled = true;
+        }
+      }
+
+      // 2. Fetch course details (refresh data)
       final doc = await FirebaseFirestore.instance
           .collection('courses')
           .doc(courseId)
@@ -42,10 +59,17 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
       if (doc.exists && mounted) {
         setState(() {
           _course = {'id': doc.id, ...doc.data() as Map<String, dynamic>};
+          _isEnrolled = isEnrolled; // Update enrollment status
           _isLoading = false;
         });
       } else {
-        if (mounted) setState(() => _isLoading = false);
+        // Even if course detail fetch fails (maybe network), use widget.course
+        if (mounted) {
+          setState(() {
+            _isEnrolled = isEnrolled;
+            _isLoading = false;
+          });
+        }
       }
     } catch (e) {
       debugPrint("Error fetching course details: $e");
@@ -61,12 +85,53 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
       builder: (context) => _PaymentGatewaySheet(
         courseName: _course['title'] ?? "Masterclass",
         price: _course['price']?.toString() ?? "₹4,999",
-        onPaymentSuccess: () {
-          setState(() {
-            _isEnrolled = true;
-          });
-          Navigator.pop(context);
-          _showConfettiDialog();
+        onPaymentSuccess: () async {
+          final user = FirebaseAuth.instance.currentUser;
+          if (user != null) {
+            final courseId = _course['id'];
+            // Save enrollment to Firestore
+            await FirebaseFirestore.instance
+                .collection('users')
+                .doc(user.uid)
+                .collection('enrolled_courses')
+                .doc(courseId)
+                .set({
+                  'id': courseId,
+                  'title': _course['title'],
+                  'thumbnailUrl': _course['thumbnailUrl'],
+                  'videoThumbnailUrl': _course['videoThumbnailUrl'],
+                  'description': _course['description'],
+                  'enrolledAt': FieldValue.serverTimestamp(),
+                  'price': _course['price'], // Saving price paid
+                  'progress': 0.0,
+                  'status': 'active',
+                  'paymentDetails': {
+                    'method':
+                        'mock_gateway', // In real app, this comes from gateway
+                    'transactionId':
+                        'txn_${DateTime.now().millisecondsSinceEpoch}',
+                    'amount': _course['price'],
+                    'currency': 'INR', // Assuming INR based on symbol
+                    'timestamp': DateTime.now().toIso8601String(),
+                  },
+                  'userEmail': user.email,
+                  'userId': user.uid,
+                }, SetOptions(merge: true));
+
+            if (mounted) {
+              setState(() {
+                _isEnrolled = true;
+              });
+              Navigator.pop(context); // Close bottom sheet
+              _showConfettiDialog();
+            }
+          } else {
+            // Handle not logged in - usually redirects to login, but for safety:
+            Navigator.pop(context);
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text("Please login to enroll")),
+            );
+          }
         },
       ),
     );
@@ -337,7 +402,21 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
           ),
           const SizedBox(height: 24),
           ElevatedButton(
-            onPressed: _showPaymentGateway,
+            onPressed: _isEnrolled
+                ? () {
+                    // Navigate to first lesson
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => CourseVideoPage(
+                          course: _course,
+                          initialLessonIndex: 0,
+                          isEnrolled: true,
+                        ),
+                      ),
+                    );
+                  }
+                : _showPaymentGateway,
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF6366F1),
               foregroundColor: Colors.white,
@@ -346,9 +425,9 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
-            child: const Text(
-              "Buy Now",
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            child: Text(
+              _isEnrolled ? "Continue Learning" : "Buy Now",
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
           ),
           const SizedBox(height: 24),

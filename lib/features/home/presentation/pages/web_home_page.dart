@@ -15,6 +15,8 @@ import 'package:tradewithtiger/features/course/presentation/pages/my_courses_pag
 import 'package:tradewithtiger/features/community/presentation/pages/community_feed_page.dart';
 import 'package:tradewithtiger/features/profile/presentation/pages/legal/about_us_page.dart';
 
+import 'package:tradewithtiger/features/home/presentation/widgets/web_mobile_bottom_bar.dart';
+
 class WebHomePage extends StatefulWidget {
   const WebHomePage({super.key});
 
@@ -73,6 +75,7 @@ class _WebHomePageState extends State<WebHomePage> {
       key: _scaffoldKey,
       backgroundColor: const Color(0xFF0F172A), // Dark Background
       drawer: _buildDrawer(),
+      bottomNavigationBar: const WebMobileBottomBar(currentRoute: "HOME"),
       body: Stack(
         children: [
           // Background Image
@@ -145,28 +148,46 @@ class _WebHomePageState extends State<WebHomePage> {
           ),
           _buildDrawerItem("HOME", Icons.home_rounded),
           _buildDrawerItem("SHOP", Icons.shopping_bag_outlined),
+          _buildDrawerItem("MY COURSE", Icons.menu_book_rounded),
+          _buildDrawerItem("COMMUNITY", Icons.people_alt_rounded),
           _buildDrawerItem("ABOUT US", Icons.info_outline_rounded),
-          _buildDrawerItem("CONTACT", Icons.contact_support_outlined),
-          _buildDrawerItem("RULES", Icons.verified_outlined),
-          _buildDrawerItem("FAQ", Icons.question_answer_outlined),
-          _buildDrawerItem("NEWS", Icons.newspaper_outlined),
           const Divider(color: Colors.white24, height: 40),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            child: _buildButton(
-              "LOGIN",
-              Colors.transparent,
-              Colors.white,
-              Icons.login,
+            child: InkWell(
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const LoginPage()),
+                );
+              },
+              child: _buildButton(
+                "LOGIN",
+                Colors.transparent,
+                Colors.white,
+                Icons.login,
+                ignoreTap: true,
+              ),
             ),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: _buildButton(
-              "SIGNUP",
-              Colors.redAccent,
-              Colors.white,
-              Icons.person_add,
+            child: InkWell(
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const SignUpPage()),
+                );
+              },
+              child: _buildButton(
+                "SIGNUP",
+                Colors.redAccent,
+                Colors.white,
+                Icons.person_add,
+                ignoreTap: true,
+              ),
             ),
           ),
         ],
@@ -192,34 +213,41 @@ class _WebHomePageState extends State<WebHomePage> {
             context,
             MaterialPageRoute(builder: (context) => const ExploreCoursesPage()),
           );
+        } else if (title == "MY COURSE") {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const MyCoursesPage()),
+          );
+        } else if (title == "COMMUNITY") {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const CommunityFeedPage()),
+          );
+        } else if (title == "ABOUT US") {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const AboutUsPage()),
+          );
         }
       },
     );
   }
 
   Widget _buildNavBar() {
+    final isMobile = MediaQuery.of(context).size.width <= 900;
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 20),
+      padding: EdgeInsets.symmetric(
+        horizontal: isMobile ? 24 : 50,
+        vertical: 20,
+      ),
       color: Colors.black.withValues(alpha: 0.6),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // Logo
+          // Left Side: Logo (and Menu on Desktop is hidden here, handled separately)
           Row(
             children: [
-              // Hamburger for Mobile
-              if (MediaQuery.of(context).size.width <= 900)
-                IconButton(
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                  icon: const Icon(Icons.menu, color: Colors.white, size: 28),
-                  onPressed: () {
-                    _scaffoldKey.currentState?.openDrawer();
-                  },
-                ),
-              if (MediaQuery.of(context).size.width <= 900)
-                const SizedBox(width: 15),
-
               Image.asset("assets/images/logoic.png", height: 40),
               const SizedBox(width: 10),
               // Hide Text logo on very small screens if needed
@@ -236,8 +264,8 @@ class _WebHomePageState extends State<WebHomePage> {
             ],
           ),
 
-          // Nav Links (Desktop Only)
-          if (MediaQuery.of(context).size.width > 900)
+          // Middle: Nav Links (Desktop Only)
+          if (!isMobile)
             Row(
               children: [
                 _buildNavLink("HOME"),
@@ -248,8 +276,17 @@ class _WebHomePageState extends State<WebHomePage> {
               ],
             ),
 
-          // Actions
-          if (MediaQuery.of(context).size.width > 900)
+          // Right Side: Actions (Desktop) or Menu (Mobile)
+          if (isMobile)
+            IconButton(
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+              icon: const Icon(Icons.menu, color: Colors.white, size: 28),
+              onPressed: () {
+                _scaffoldKey.currentState?.openDrawer();
+              },
+            )
+          else
             StreamBuilder<User?>(
               stream: FirebaseAuth.instance.authStateChanges(),
               builder: (context, snapshot) {

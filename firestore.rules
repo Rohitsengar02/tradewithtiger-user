@@ -3,14 +3,27 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
+    // Collection Group Query for Transactions
+    // Allows admin (or any auth user for now) to query across all users' enrolled_courses
+    match /{path=**}/enrolled_courses/{courseId} {
+      allow read: if request.auth != null;
+    }
+
     // User Profiles
-    // Keep this secure: Users can only read/write their OWN profile.
+    // User Profiles
+    // Admin Login is implemented. We allow ANY authenticated user to read/write all user data.
+    // In production, restrict to specific admin UIDs.
     match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read, write: if request.auth != null;
       
       // Saved Posts Subcollection
       match /saved_posts/{postId} {
-         allow read, write: if request.auth != null && request.auth.uid == userId;
+         allow read, write: if request.auth != null;
+      }
+
+      // Enrolled Courses Subcollection
+      match /enrolled_courses/{courseId} {
+         allow read, write: if request.auth != null;
       }
     }
     

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:tradewithtiger/features/home/presentation/widgets/web_mobile_bottom_bar.dart';
 import 'package:tradewithtiger/features/home/presentation/widgets/web_sidebar.dart';
 import 'package:tradewithtiger/features/community/presentation/widgets/daily_viral_questions_sidebar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -17,6 +18,7 @@ class CommunityFeedPage extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF9FAFB),
+      bottomNavigationBar: const WebMobileBottomBar(currentRoute: "COMMUNITY"),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
             .collection('community')

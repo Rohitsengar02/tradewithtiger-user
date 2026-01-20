@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tradewithtiger/features/home/presentation/widgets/web_mobile_bottom_bar.dart';
 
 class AboutUsPage extends StatelessWidget {
   const AboutUsPage({super.key});
@@ -7,6 +8,7 @@ class AboutUsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
+      bottomNavigationBar: const WebMobileBottomBar(currentRoute: "ABOUT US"),
       appBar: AppBar(
         title: const Text(
           "About Us",
